@@ -11,7 +11,7 @@ interface TodoStore {
   deleteTask: (id: string) => void;
   moveTask: (id: string, status: Status) => void;
   completeTask: (id: string) => void;
-  uncompleteTask: (id: string) => void;
+  incompleteTask: (id: string) => void;
   setFilters: (filters: Partial<TaskFilters>) => void;
   setSort: (sort: Partial<TaskSort>) => void;
 }
@@ -81,7 +81,7 @@ export const useTodoStore = create<TodoStore>()(
         return { tasks };
       }),
 
-      uncompleteTask: (id) => set((state) => ({
+      incompleteTask: (id) => set((state) => ({
         tasks: state.tasks.map((task) => {
           if (task.id === id) {
             if (task.deleteTimeout) {
