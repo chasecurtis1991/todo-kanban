@@ -10,7 +10,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({task}: TaskCardProps) {
-    const {deleteTask, completeTask, uncompleteTask, updateTask} = useTodoStore();
+    const {deleteTask, completeTask, incompleteTask, updateTask} = useTodoStore();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [editedDescription, setEditedDescription] = useState(task.description || '');
@@ -211,7 +211,7 @@ export function TaskCard({task}: TaskCardProps) {
                     </button>
                 ) : (
                     <button
-                        onClick={() => uncompleteTask(task.id)}
+                        onClick={() => incompleteTask(task.id)}
                         className="p-1 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded"
                     >
                         <XCircle className="w-5 h-5"/>
