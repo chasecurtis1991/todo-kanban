@@ -2,6 +2,8 @@
 
 A sleek and intuitive **To-Do Task Manager** using the **Kanban model**, built with **React** and powered by **Vite**. Organize your tasks visually, track progress effortlessly, and boost productivity!
 
+![Kanban Screenshot](kanban-screenshot.png)
+
 ## Features
 
 - **Kanban Board**: Organize tasks into customizable columns (e.g., To Do, In Progress, Done).
