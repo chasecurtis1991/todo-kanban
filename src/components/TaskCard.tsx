@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {useDrag} from 'react-dnd';
 import {format} from 'date-fns';
 import {Task, Priority} from '../types';
@@ -19,7 +19,13 @@ export function TaskCard({task}: TaskCardProps) {
     );
     const [editedPriority, setEditedPriority] = useState<Priority>(task.priority);
     const [editedTags, setEditedTags] = useState<string[]>(task.tags);
+    const [editedIsRecurring, setEditedIsRecurring] = useState(task.isRecurring);
+    const [editedRecurringDays, setEditedRecurringDays] = useState(Math.floor((task.recurringInterval || 0) / (24 * 60)));
+    const [editedRecurringHours, setEditedRecurringHours] = useState(Math.floor(((task.recurringInterval || 0) % (24 * 60)) / 60));
+    const [editedRecurringMinutes, setEditedRecurringMinutes] = useState((task.recurringInterval || 0) % 60);
     const [tagInput, setTagInput] = useState('');
+    const [countdown, setCountdown] = useState(10);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const [{isDragging}, drag] = useDrag(() => ({
         type: 'TASK',
@@ -29,13 +35,37 @@ export function TaskCard({task}: TaskCardProps) {
         }),
     }));
 
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (task.completedAt && !task.isRecurring) {
+            setCountdown(10);
+            timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        deleteTask(task.id);
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (timer) {
+                clearInterval(timer);
+            }
+        };
+    }, [task.completedAt, task.isRecurring, task.id, deleteTask]);
+
     const handleSave = () => {
+        const totalMinutes = editedRecurringDays * 24 * 60 + editedRecurringHours * 60 + editedRecurringMinutes;
         updateTask(task.id, {
             title: editedTitle,
             description: editedDescription,
             dueDate: editedDueDate ? new Date(editedDueDate) : undefined,
             priority: editedPriority,
             tags: editedTags,
+            isRecurring: editedIsRecurring,
+            recurringInterval: editedIsRecurring ? totalMinutes : undefined,
         });
         setIsEditing(false);
     };
@@ -78,7 +108,7 @@ export function TaskCard({task}: TaskCardProps) {
                         type="datetime-local"
                         value={editedDueDate}
                         onChange={(e) => setEditedDueDate(e.target.value)}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 [color-scheme:light] dark:[color-scheme:dark]"
                     />
 
                     <select
@@ -91,6 +121,69 @@ export function TaskCard({task}: TaskCardProps) {
                         <option value="high">High</option>
                     </select>
 
+                    <div className="flex items-center mb-4">
+                        <input
+                            type="checkbox"
+                            checked={editedIsRecurring}
+                            onChange={(e) => setEditedIsRecurring(e.target.checked)}
+                            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                        />
+                        <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Recurring Task</label>
+                    </div>
+
+                    {editedIsRecurring && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Repeat every
+                            </label>
+                            <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={editedRecurringDays || ''}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setEditedRecurringDays(value === '' ? 0 : Math.max(0, parseInt(value)));
+                                        }}
+                                        placeholder="0"
+                                        className="h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    />
+                                    <label className="block text-sm text-gray-500 dark:text-gray-400 mt-1">Days</label>
+                                </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        value={editedRecurringHours || ''}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setEditedRecurringHours(value === '' ? 0 : Math.min(23, Math.max(0, parseInt(value))));
+                                        }}
+                                        placeholder="0"
+                                        className="h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    />
+                                    <label className="block text-sm text-gray-500 dark:text-gray-400 mt-1">Hours</label>
+                                </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        value={editedRecurringMinutes || ''}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setEditedRecurringMinutes(value === '' ? 0 : Math.min(59, Math.max(0, parseInt(value))));
+                                        }}
+                                        placeholder="0"
+                                        className="h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    />
+                                    <label className="block text-sm text-gray-500 dark:text-gray-400 mt-1">Minutes</label>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div>
                         <div className="flex flex-wrap gap-2 mb-2">
                             {editedTags.map((tag, index) => (
@@ -137,7 +230,6 @@ export function TaskCard({task}: TaskCardProps) {
         );
     }
 
-
     return (
         <div
             ref={drag}
@@ -167,7 +259,17 @@ export function TaskCard({task}: TaskCardProps) {
                 {task.isRecurring && (
                     <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                         <RotateCcw className="w-4 h-4 mr-2"/>
-                        Every {task.recurringInterval} days
+                        Repeats every{' '}
+                        {task.recurringInterval && (
+                            <>
+                                {Math.floor(task.recurringInterval / (24 * 60)) > 0 && 
+                                    `${Math.floor(task.recurringInterval / (24 * 60))} days `}
+                                {Math.floor((task.recurringInterval % (24 * 60)) / 60) > 0 &&
+                                    `${Math.floor((task.recurringInterval % (24 * 60)) / 60)} hours `}
+                                {task.recurringInterval % 60 > 0 && 
+                                    `${task.recurringInterval % 60} minutes`}
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -191,7 +293,7 @@ export function TaskCard({task}: TaskCardProps) {
             {task.completedAt && !task.isRecurring && (
                 <div className="mt-3 flex items-center text-sm text-gray-500 dark:text-gray-400">
                     <Clock className="w-4 h-4 mr-2"/>
-                    Deleting in 10s...
+                    Deleting in {countdown}s...
                 </div>
             )}
 
@@ -218,12 +320,43 @@ export function TaskCard({task}: TaskCardProps) {
                     </button>
                 )}
                 <button
-                    onClick={() => deleteTask(task.id)}
+                    onClick={() => setShowDeleteConfirm(true)}
                     className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                 >
                     <Trash2 className="w-5 h-5"/>
                 </button>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                            Delete Task
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
+                            Are you sure you want to delete this task? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    deleteTask(task.id);
+                                    setShowDeleteConfirm(false);
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
