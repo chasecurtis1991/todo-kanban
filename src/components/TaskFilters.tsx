@@ -63,7 +63,7 @@ export function TaskFilters() {
                     },
                   })
                 }
-                className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 dark:text-gray-300"
+                className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 dark:text-gray-300 [color-scheme:light] dark:[color-scheme:dark]"
               />
               <input
                 type="date"
@@ -76,7 +76,7 @@ export function TaskFilters() {
                     },
                   })
                 }
-                className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 dark:text-gray-300"
+                className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 dark:text-gray-300 [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
           </div>

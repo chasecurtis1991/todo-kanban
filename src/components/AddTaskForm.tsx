@@ -10,7 +10,9 @@ export function AddTaskForm() {
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringInterval, setRecurringInterval] = useState(1);
+  const [recurringDays, setRecurringDays] = useState(0);
+  const [recurringHours, setRecurringHours] = useState(0);
+  const [recurringMinutes, setRecurringMinutes] = useState(0);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
 
@@ -25,7 +27,7 @@ export function AddTaskForm() {
       priority,
       status: 'todo',
       isRecurring,
-      recurringInterval: isRecurring ? recurringInterval : undefined,
+      recurringInterval: isRecurring ? (recurringDays * 24 * 60 + recurringHours * 60 + recurringMinutes) : undefined,
       tags,
     });
     setIsOpen(false);
@@ -38,7 +40,9 @@ export function AddTaskForm() {
     setDueDate('');
     setPriority('medium');
     setIsRecurring(false);
-    setRecurringInterval(1);
+    setRecurringDays(0);
+    setRecurringHours(0);
+    setRecurringMinutes(0);
     setTags([]);
     setTagInput('');
   };
@@ -107,7 +111,7 @@ export function AddTaskForm() {
               type="datetime-local"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="mt-1 h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="mt-1 h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
 
@@ -126,57 +130,96 @@ export function AddTaskForm() {
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleAddTag}
+              placeholder=" Type and press Enter to add tags"
+              className="mt-2 h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-sm flex items-center"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => setTags(tags.filter((_, i) => i !== index))}
+                    className="ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={isRecurring}
+              onChange={(e) => setIsRecurring(e.target.checked)}
+              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+            />
+            <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Recurring Task</label>
+          </div>
+
+          {isRecurring && (
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
-                <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleAddTag}
-                    placeholder=" Type and press Enter to add tags"
-                    className="mt-2 h-10 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                />
-                <div className="mt-2 flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                        <span
-                            key={index}
-                            className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-sm flex items-center"
-                        >
-                            {tag}
-                            <button
-                                type="button"
-                                onClick={() => setTags(tags.filter((_, i) => i !== index))}
-                                className="ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                            >
-                                <X className="w-4 h-4"/>
-                            </button>
-                        </span>
-                    ))}
-                </div>
-            </div>
-
-            <div className="flex items-center">
-                <input
-                    type="checkbox"
-                    checked={isRecurring}
-                    onChange={(e) => setIsRecurring(e.target.checked)}
-                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                />
-                <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Recurring Task</label>
-            </div>
-
-            {isRecurring && (
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Repeat every
+              </label>
+              <div className="flex space-x-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Repeat every (days)
-                    </label>
-                    <input
-                        type="number"
-                        min="1"
-                value={recurringInterval}
-                onChange={(e) => setRecurringInterval(Number(e.target.value))}
-                className="h-10 mt-2 pl-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-              />
+                  <input
+                    type="number"
+                    min="0"
+                    value={recurringDays || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setRecurringDays(value === '' ? 0 : Math.max(0, parseInt(value)));
+                    }}
+                    placeholder="0"
+                    className="h-10 pl-2 block w-20 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  />
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mt-1">Days</label>
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={recurringHours || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setRecurringHours(value === '' ? 0 : Math.min(23, Math.max(0, parseInt(value))));
+                    }}
+                    placeholder="0"
+                    className="h-10 pl-2 block w-20 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  />
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mt-1">Hours</label>
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={recurringMinutes || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setRecurringMinutes(value === '' ? 0 : Math.min(59, Math.max(0, parseInt(value))));
+                    }}
+                    placeholder="0"
+                    className="h-10 pl-2 block w-20 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  />
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mt-1">Minutes</label>
+                </div>
+              </div>
             </div>
           )}
 
